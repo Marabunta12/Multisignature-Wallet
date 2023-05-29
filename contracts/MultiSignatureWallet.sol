@@ -5,6 +5,11 @@ error MultiSignatureWallet__OwnersRequired();
 error MultiSignatureWallet__InvalidOwner();
 error MultiSignatureWallet__NotUnigueOwner();
 error MultiSignatureWallet__NotOwner();
+error MultiSignatureWallet__TransactionDoesNotExist();
+error MultiSignatureWallet__AlreadtApproved();
+error MultiSignatureWallet__NotApproved();
+error MultiSignatureWallet__AlreadyExecuted();
+error MultiSignatureWallet__NotEnoughApprovals();
 
 contract MultiSignatureWallet {
     struct Transaction {
@@ -33,12 +38,25 @@ contract MultiSignatureWallet {
     }
 
     modifier transactionExists(uint _transactionId) {
+        if (_transactionId >= s_transactions.length)
+            revert MultiSignatureWallet__TransactionDoesNotExist();
         _;
     }
     modifier notApproved(uint _transactionId) {
+        if (s_approvedTransactions[_transactionId][msg.sender] == true)
+            revert MultiSignatureWallet__AlreadtApproved();
         _;
     }
+
+    modifier approved(uint _transactionId) {
+        if (s_approvedTransactions[_transactionId][msg.sender] == false)
+            revert MultiSignatureWallet__NotApproved();
+        _;
+    }
+
     modifier notExecuted(uint _transactionId) {
+        if (s_transactions[_transactionId].executed == true)
+            revert MultiSignatureWallet__AlreadyExecuted();
         _;
     }
 
@@ -83,5 +101,36 @@ contract MultiSignatureWallet {
         transactionExists(_transactionId)
         notApproved(_transactionId)
         notExecuted(_transactionId)
-    {}
+    {
+        s_approvedTransactions[_transactionId][msg.sender] = true;
+        s_transactions[_transactionId].numConfirmations++;
+        emit ApproveTransaction(msg.sender, _transactionId);
+    }
+
+    function revokeApproval(
+        uint _transactionId
+    )
+        external
+        onlyOwner
+        transactionExists(_transactionId)
+        approved(_transactionId)
+        notExecuted(_transactionId)
+    {
+        s_approvedTransactions[_transactionId][msg.sender] = false;
+        s_transactions[_transactionId].numConfirmations--;
+        emit RevokeApproval(msg.sender, _transactionId);
+    }
+
+    function executeTransaction(
+        uint _transactionId
+    )
+        external
+        onlyOwner
+        transactionExists(_transactionId)
+        notExecuted(_transactionId)
+    {
+        if (s_transactions[_transactionId].numConfirmations < i_approvalsNeeded)
+            revert MultiSignatureWallet__NotEnoughApprovals();
+        s_transactions[_transactionId].executed = true;
+    }
 }
