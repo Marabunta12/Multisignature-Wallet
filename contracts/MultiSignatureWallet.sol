@@ -10,6 +10,7 @@ error MultiSignatureWallet__AlreadtApproved();
 error MultiSignatureWallet__NotApproved();
 error MultiSignatureWallet__AlreadyExecuted();
 error MultiSignatureWallet__NotEnoughApprovals();
+error MultiSignatureWallet__FailedToSendETH();
 
 contract MultiSignatureWallet {
     struct Transaction {
@@ -132,5 +133,10 @@ contract MultiSignatureWallet {
         if (s_transactions[_transactionId].numConfirmations < i_approvalsNeeded)
             revert MultiSignatureWallet__NotEnoughApprovals();
         s_transactions[_transactionId].executed = true;
+        (bool success, ) = s_transactions[_transactionId].to.call{
+            value: s_transactions[_transactionId].value
+        }("");
+        if (success == false) revert MultiSignatureWallet__FailedToSendETH();
+        emit ExecuteTransaction(_transactionId);
     }
 }
