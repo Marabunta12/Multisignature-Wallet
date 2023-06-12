@@ -139,4 +139,12 @@ contract MultiSignatureWallet {
         if (success == false) revert MultiSignatureWallet__FailedToSendETH();
         emit ExecuteTransaction(_transactionId);
     }
+
+    function isOwner(address _address) external view returns (bool) {
+        return s_isOwner[_address];
+    }
+
+    function getOwners() external view returns (address[] memory) {
+        return i_owners;
+    }
 }
