@@ -147,4 +147,10 @@ contract MultiSignatureWallet {
     function getOwners() external view returns (address[] memory) {
         return i_owners;
     }
+
+    function getTransaction(
+        uint _transactionId
+    ) external view returns (Transaction memory) {
+        return s_transactions[_transactionId];
+    }
 }

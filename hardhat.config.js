@@ -8,5 +8,8 @@ module.exports = {
         deployer: {
             default: 0,
         },
+        notOwner: {
+            default: 2,
+        },
     },
 };
