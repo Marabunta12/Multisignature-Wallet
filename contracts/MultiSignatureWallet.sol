@@ -153,4 +153,11 @@ contract MultiSignatureWallet {
     ) external view returns (Transaction memory) {
         return s_transactions[_transactionId];
     }
+
+    function getIsApprovedTransaction(
+        uint _transactionId,
+        address _address
+    ) external view returns (bool) {
+        return s_isApprovedTransaction[_transactionId][_address];
+    }
 }
