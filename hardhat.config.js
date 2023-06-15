@@ -8,6 +8,12 @@ module.exports = {
         deployer: {
             default: 0,
         },
+        owner: {
+            default: 0,
+        },
+        secondOwner: {
+            default: 1,
+        },
         notOwner: {
             default: 2,
         },
