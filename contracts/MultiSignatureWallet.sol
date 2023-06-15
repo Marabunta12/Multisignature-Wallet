@@ -6,7 +6,7 @@ error MultiSignatureWallet__InvalidOwner();
 error MultiSignatureWallet__NotUnigueOwner();
 error MultiSignatureWallet__NotOwner();
 error MultiSignatureWallet__TransactionDoesNotExist();
-error MultiSignatureWallet__AlreadtApproved();
+error MultiSignatureWallet__AlreadyApproved();
 error MultiSignatureWallet__NotApproved();
 error MultiSignatureWallet__AlreadyExecuted();
 error MultiSignatureWallet__NotEnoughApprovals();
@@ -24,7 +24,7 @@ contract MultiSignatureWallet {
     uint public i_approvalsNeeded;
     mapping(address => bool) s_isOwner;
     Transaction[] public s_transactions;
-    mapping(uint => mapping(address => bool)) s_approvedTransactions;
+    mapping(uint => mapping(address => bool)) s_isApprovedTransaction;
 
     event DepositFunds(address indexed sender, uint amount);
     event SubmitTransaction(uint indexed transactionId);
@@ -44,13 +44,13 @@ contract MultiSignatureWallet {
         _;
     }
     modifier notApproved(uint _transactionId) {
-        if (s_approvedTransactions[_transactionId][msg.sender] == true)
-            revert MultiSignatureWallet__AlreadtApproved();
+        if (s_isApprovedTransaction[_transactionId][msg.sender] == true)
+            revert MultiSignatureWallet__AlreadyApproved();
         _;
     }
 
     modifier approved(uint _transactionId) {
-        if (s_approvedTransactions[_transactionId][msg.sender] == false)
+        if (s_isApprovedTransaction[_transactionId][msg.sender] == false)
             revert MultiSignatureWallet__NotApproved();
         _;
     }
@@ -103,7 +103,7 @@ contract MultiSignatureWallet {
         notApproved(_transactionId)
         notExecuted(_transactionId)
     {
-        s_approvedTransactions[_transactionId][msg.sender] = true;
+        s_isApprovedTransaction[_transactionId][msg.sender] = true;
         s_transactions[_transactionId].numConfirmations++;
         emit ApproveTransaction(msg.sender, _transactionId);
     }
@@ -117,7 +117,7 @@ contract MultiSignatureWallet {
         approved(_transactionId)
         notExecuted(_transactionId)
     {
-        s_approvedTransactions[_transactionId][msg.sender] = false;
+        s_isApprovedTransaction[_transactionId][msg.sender] = false;
         s_transactions[_transactionId].numConfirmations--;
         emit RevokeApproval(msg.sender, _transactionId);
     }
